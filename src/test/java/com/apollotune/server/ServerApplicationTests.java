@@ -1,4 +1,4 @@
-package com.apollo.tune.server;
+package com.apollotune.server;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
