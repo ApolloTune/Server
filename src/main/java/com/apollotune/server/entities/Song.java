@@ -31,7 +31,6 @@ public class Song {
 
     @OneToMany(mappedBy = "song",
             cascade = {CascadeType.ALL},
-            orphanRemoval = true,
             fetch = FetchType.LAZY)
     private List<Favsong> favsongs;
 }
