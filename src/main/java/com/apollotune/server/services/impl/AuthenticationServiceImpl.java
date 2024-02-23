@@ -3,9 +3,10 @@ package com.apollotune.server.services.impl;
 
 import com.apollotune.server.entities.User;
 import com.apollotune.server.entities.enums.Role;
-import com.apollotune.server.payloads.AuthenticationRequest;
-import com.apollotune.server.payloads.AuthenticationResponse;
-import com.apollotune.server.payloads.RegisterRequest;
+import com.apollotune.server.exceptions.ApiException;
+import com.apollotune.server.payloads.request.AuthenticationRequest;
+import com.apollotune.server.payloads.response.AuthenticationResponse;
+import com.apollotune.server.payloads.request.RegisterRequest;
 import com.apollotune.server.repositories.UserRepository;
 import com.apollotune.server.security.JwtService;
 import com.apollotune.server.services.AuthenticationService;
@@ -48,7 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 )
         );
         var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new ApiException("No registered mail found"));
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)

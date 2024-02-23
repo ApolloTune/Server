@@ -1,9 +1,9 @@
 package com.apollotune.server.controllers;
 
 
-import com.apollotune.server.payloads.AuthenticationRequest;
-import com.apollotune.server.payloads.AuthenticationResponse;
-import com.apollotune.server.payloads.RegisterRequest;
+import com.apollotune.server.payloads.request.AuthenticationRequest;
+import com.apollotune.server.payloads.response.AuthenticationResponse;
+import com.apollotune.server.payloads.request.RegisterRequest;
 import com.apollotune.server.services.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
