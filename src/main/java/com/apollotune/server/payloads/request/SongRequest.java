@@ -1,4 +1,4 @@
-package com.apollotune.server.payloads;
+package com.apollotune.server.payloads.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

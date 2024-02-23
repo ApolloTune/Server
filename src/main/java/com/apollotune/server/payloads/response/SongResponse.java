@@ -9,6 +9,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationResponse {
-    private String token;
+public class SongResponse {
+    private String songname;
+
+    private String songartist;
+
+    private String songphoto;
+
+    private String spotifylink;
+
+    private String ytmusiclink;
 }
