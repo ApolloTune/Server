@@ -1,5 +1,6 @@
 package com.apollotune.server.services;
 
+import com.apollotune.server.entities.Song;
 import com.apollotune.server.payloads.response.ApiResponse;
 import com.apollotune.server.payloads.request.SongRequest;
 import com.apollotune.server.payloads.response.SongResponse;
@@ -14,7 +15,7 @@ public interface SongService {
 
     ApiResponse updateSong(SongRequest songRequest, Integer id);
 
-    List<SongResponse> getAllSong();
+    List<Song> getAllSong();
 
     SongResponse getSong(Integer id);
 

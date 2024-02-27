@@ -66,9 +66,9 @@ public class SongServiceImpl implements SongService {
     }
 
     @Override
-    public List<SongResponse> getAllSong() {
+    public List<Song> getAllSong() {
         List<Song> allsong = repository.findAll();
-        // Todo: SongResponse nesnesi şeklinde dön ve yukarıda favsong listesini de dönmeyi unutma bi tur daha gözden geçir
+        return allsong;
     }
 
     @Override
