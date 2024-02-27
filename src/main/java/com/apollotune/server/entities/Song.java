@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -33,4 +34,12 @@ public class Song {
             cascade = {CascadeType.ALL},
             fetch = FetchType.LAZY)
     private List<Favsong> favsongs;
+
+    public void addFavsong(Favsong favsong){
+        if(favsongs == null){
+            favsongs = new ArrayList<>();
+        }
+        favsongs.add(favsong);
+        favsong.setSong(this);
+    }
 }
