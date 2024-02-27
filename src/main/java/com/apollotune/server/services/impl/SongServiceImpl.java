@@ -12,13 +12,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+
 @Service
 @RequiredArgsConstructor
 public class SongServiceImpl implements SongService {
     private final SongRepository repository;
+
     @Override
     public ApiResponse addSong(SongRequest songRequest) {
-        try{
+        try {
             var song = Song.builder()
                     .songname(songRequest.getSongname())
                     .songartist(songRequest.getSongartist())
@@ -31,20 +33,21 @@ public class SongServiceImpl implements SongService {
                     .message("Song created")
                     .success(true)
                     .build();
-        }catch (Exception e){
+        } catch (Exception e) {
             return ApiResponse.builder()
-                    .message("Song not created: "+e.getMessage())
+                    .message("Song not created: " + e.getMessage())
                     .success(false)
                     .build();
         }
     }
+
     @Override
     public ApiResponse deleteSong(Integer id) {
         var song = repository.findById(id)
-                .orElseThrow(() -> new ApiException("No songs with "+id+" found"));
+                .orElseThrow(() -> new ApiException("No songs with " + id + " found"));
         repository.delete(song);
         return ApiResponse.builder()
-                .message("deleted song with "+id)
+                .message("deleted song with " + id)
                 .success(true)
                 .build();
     }
@@ -52,7 +55,7 @@ public class SongServiceImpl implements SongService {
     @Override
     public ApiResponse updateSong(SongRequest songRequest, Integer id) {
         var song = repository.findById(id)
-                .orElseThrow(() -> new ApiException("No songs with "+id+" found"));
+                .orElseThrow(() -> new ApiException("No songs with " + id + " found"));
         song.setSongname(songRequest.getSongname());
         song.setSongartist(songRequest.getSongartist());
         song.setSongphoto(songRequest.getSongphoto());
@@ -60,7 +63,7 @@ public class SongServiceImpl implements SongService {
         song.setYtmusiclink(songRequest.getYtmusiclink());
         repository.save(song);
         return ApiResponse.builder()
-                .message("updated song with "+id)
+                .message("updated song with " + id)
                 .success(true)
                 .build();
     }
@@ -73,11 +76,25 @@ public class SongServiceImpl implements SongService {
 
     @Override
     public SongResponse getSong(Integer id) {
-        return null;
+        var song = repository.findById(id).orElseThrow(() -> new ApiException("No songs with " + id + " found"));
+        return SongResponse.builder()
+                .songname(song.getSongname())
+                .songartist(song.getSongartist())
+                .songphoto(song.getSongphoto())
+                .spotifylink(song.getSpotifylink())
+                .ytmusiclink(song.getYtmusiclink())
+                .build();
     }
 
     @Override
     public SongResponse getSongByName(String name) {
-        return null;
+        var song = repository.findBySongname(name).orElseThrow(() -> new ApiException("No songs with " + name + " found"));
+        return SongResponse.builder()
+                .songname(song.getSongname())
+                .songartist(song.getSongartist())
+                .songphoto(song.getSongphoto())
+                .spotifylink(song.getSpotifylink())
+                .ytmusiclink(song.getYtmusiclink())
+                .build();
     }
 }
