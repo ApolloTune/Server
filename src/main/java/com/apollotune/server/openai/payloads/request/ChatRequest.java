@@ -1,4 +1,4 @@
-package com.apollotune.server.payloads.request;
+package com.apollotune.server.openai.payloads.request;
 
 
 import lombok.AllArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -17,4 +18,10 @@ public class ChatRequest {
     private List<Message> messages;
     private int n;
     private double temperature;
+    public ChatRequest(String model, String prompt) {
+        this.model = model;
+
+        this.messages = new ArrayList<>();
+        this.messages.add(new Message("user", prompt));
+    }
 }

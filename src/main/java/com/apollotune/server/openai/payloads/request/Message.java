@@ -1,4 +1,4 @@
-package com.apollotune.server.payloads.request;
+package com.apollotune.server.openai.payloads.request;
 
 
 import lombok.AllArgsConstructor;
