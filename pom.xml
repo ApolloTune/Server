@@ -78,8 +78,13 @@
 		</dependency>
 		<dependency>
 			<groupId>dev.langchain4j</groupId>
-			<artifactId>langchain4j</artifactId>
+			<artifactId>langchain4j-core</artifactId>
 			<version>0.27.0</version>
+		</dependency>
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-open-ai</artifactId>
+			<version>0.27.1</version>
 		</dependency>
 	</dependencies>
 

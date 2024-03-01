@@ -1,10 +1,10 @@
 package com.apollotune.server.openai.enums;
 
 public enum MusicYear {
-    SEVENTIES,
-    EIGHTIES,
-    NINETIES,
-    _00S,
-    _10S,
-    _20S
+    _1970s,
+    _1980s,
+    _1990s,
+    _2000s,
+    _2010s,
+    _2020s;
 }
