@@ -45,7 +45,7 @@ public class ChatController {
         return response.getChoices().get(0).getMessage().getContent();
          */
         PromptTemplate promptTemplate = PromptTemplate
-                .from(PromptByApp.KEY_SEARCH);
+                .from(PromptByApp.KEY_SEARCH3);
         Map<String, Object> variables = new HashMap<>();
         keySearchRequest.getEmotions().forEach(musicEmotion -> variables.put("musicemotion", musicEmotion));
         keySearchRequest.getMusicYears().forEach(musicYear -> variables.put("musicyear", musicYear));
