@@ -6,11 +6,8 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
 
@@ -18,9 +15,6 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 @RequestMapping("/api/v1/openai")
 @RequiredArgsConstructor
 public class ChatController {
-    @Qualifier("openaiRestTemplate")
-    @Autowired
-    private RestTemplate restTemplate;
 
     @Value("${openai.model}")
     private String MODEL;
