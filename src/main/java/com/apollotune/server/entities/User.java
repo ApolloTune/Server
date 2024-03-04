@@ -11,7 +11,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
+/**
+ * @author github.com/YusufDagdeviren"
+ * @version 1.0
+ * @since 2024-02-22
+ */
 @Data
 @Builder
 @NoArgsConstructor

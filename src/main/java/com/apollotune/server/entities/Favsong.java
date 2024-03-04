@@ -5,7 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+/**
+ * @author github.com/YusufDagdeviren"
+ * @version 1.0
+ * @since 2024-02-22
+ */
 @Data
 @Builder
 @NoArgsConstructor

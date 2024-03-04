@@ -8,7 +8,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * @author github.com/YusufDagdeviren"
+ * @version 1.0
+ * @since 2024-02-22
+ */
 @Data
 @Builder
 @NoArgsConstructor
