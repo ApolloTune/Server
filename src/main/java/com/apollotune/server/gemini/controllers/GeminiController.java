@@ -7,6 +7,7 @@ import com.google.cloud.vertexai.VertexAI;
 import com.google.cloud.vertexai.api.GenerateContentResponse;
 import com.google.cloud.vertexai.generativeai.ContentMaker;
 import com.google.cloud.vertexai.generativeai.GenerativeModel;
+import com.google.cloud.vertexai.generativeai.ResponseHandler;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import lombok.RequiredArgsConstructor;
@@ -48,8 +49,12 @@ public class GeminiController {
             GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
                     prompt.text()
             ));
-            return response.toString();
+
+            String responseVertexAi = ResponseHandler.getText(response);
+            return responseVertexAi;
+
         }
     }
 }
+
 
