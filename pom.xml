@@ -91,6 +91,11 @@
 			<artifactId>langchain4j-vertex-ai</artifactId>
 			<version>0.27.1</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-vertexai</artifactId>
+			<version>0.4.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
