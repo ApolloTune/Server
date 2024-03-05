@@ -2,7 +2,10 @@ package com.apollotune.server.gemini.controllers;
 
 
 import com.apollotune.server.gemini.payloads.request.GeminiKeySearchRequest;
+import com.apollotune.server.gemini.payloads.response.GeminiKeySearchResponse;
 import com.apollotune.server.gemini.prompt.GeminiPromptByKeySearch;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.vertexai.VertexAI;
 import com.google.cloud.vertexai.api.GenerateContentResponse;
 import com.google.cloud.vertexai.generativeai.ContentMaker;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/gemini")
@@ -32,7 +36,7 @@ public class GeminiController {
     private String LOCATION;
 
     @GetMapping("/keysearchrequest")
-    public String keySearch(@RequestBody GeminiKeySearchRequest keySearchRequest) throws IOException {
+    public List<GeminiKeySearchResponse> keySearch(@RequestBody GeminiKeySearchRequest keySearchRequest) throws IOException {
         GeminiPromptByKeySearch promptByApp = new GeminiPromptByKeySearch();
 
         promptByApp.setMusicemotion(keySearchRequest.getEmotions());
@@ -41,7 +45,7 @@ public class GeminiController {
         promptByApp.setMusiclanguages(keySearchRequest.getMusicLanguages());
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
-
+        ObjectMapper objectMapper = new ObjectMapper();
         try (VertexAI vertexAI = new VertexAI(PROJECT, LOCATION)) {
 
 
@@ -49,10 +53,9 @@ public class GeminiController {
             GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
                     prompt.text()
             ));
-
             String responseVertexAi = ResponseHandler.getText(response);
-            return responseVertexAi;
-
+            List<GeminiKeySearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiKeySearchResponse>>() {});
+            return geminiKeySearchResponses;
         }
     }
 }
