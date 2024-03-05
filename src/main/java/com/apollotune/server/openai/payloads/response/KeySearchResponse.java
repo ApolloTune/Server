@@ -15,4 +15,5 @@ public class KeySearchResponse {
     private String musicName;
     private String genre;
     private String language;
+    private String spotifyId;
 }
