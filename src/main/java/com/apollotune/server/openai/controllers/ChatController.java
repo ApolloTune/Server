@@ -10,13 +10,21 @@ import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import lombok.RequiredArgsConstructor;
+import org.apache.hc.core5.http.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.enums.ModelObjectType;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.special.SearchResult;
+import se.michaelthelin.spotify.requests.data.search.SearchItemRequest;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -34,6 +42,14 @@ public class ChatController {
     @Value("${openai.api.key}")
     private String OPEN_API_KEY;
 
+    @Value("${spotify.client-secret-id}")
+    private String SPOTIFY_CLIENT_SECRET_ID;
+
+    @Value("${spotify.client-id}")
+    private String SPOTIFY_CLIENT_ID;
+
+    @Value("${spotify.redirect-url}")
+    private String SPOTIFY_REDIRECT_URL;
     @GetMapping("/keysearchrequest")
     public List<KeySearchResponse> keySearch(@RequestBody KeySearchRequest keySearchRequest) throws IOException {
         PromptByKeySearch promptByApp = new PromptByKeySearch();

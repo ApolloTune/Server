@@ -41,14 +41,12 @@ import java.util.List;
         "    \"musicName\": \"....\",\n" +
         "    \"genre\": \"....\"\n" +
         "    \"language\": \"....\"\n" +
-        "    \"spotifyId\": \"....\"\n"+
         "  },\n" +
         "  {\n" +
         "    \"artistName\": \".....\",\n" +
         "    \"musicName\": \".....\"\n" +
         "    \"genre\": \"....\"\n" +
         "    \"language\": \"....\"\n" +
-        "    \"spotifyId\": \"....\"\n"+
         "  },\n" +
         "  // ... 6 more suggestions\n" +
         "]")
