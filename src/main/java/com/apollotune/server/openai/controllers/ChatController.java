@@ -20,11 +20,16 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
+import se.michaelthelin.spotify.model_objects.special.AlbumSimplifiedSpecial;
+import se.michaelthelin.spotify.model_objects.specification.Album;
+import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
+import se.michaelthelin.spotify.requests.data.search.simplified.SearchAlbumsRequest;
 import se.michaelthelin.spotify.requests.data.search.simplified.SearchTracksRequest;
+import se.michaelthelin.spotify.requests.data.search.simplified.special.SearchAlbumsSpecialRequest;
 
 import java.io.IOException;
 import java.net.URI;
@@ -106,11 +111,21 @@ public class ChatController {
             .limit(10)
             .offset(0)
             .build();
+            SearchAlbumsSpecialRequest searchAlbumsRequest = spotifyApi.searchAlbumsSpecial(keySearchResponses.get(0).getMusicName())
+            .market(CountryCode.SE)
+            .limit(10)
+            .offset(0)
+            .build();
+
             Paging<Track> trackPaging = searchTracksRequest.execute();
+            Paging<AlbumSimplifiedSpecial> albumPaging = searchAlbumsRequest.execute();
             System.out.println("Return : "+ trackPaging.getItems()[0]);
             //CompletableFuture<Paging<Track>> pagingFuture = searchTracksRequest.executeAsync();
             //Paging<Track> trackPaging1 = pagingFuture.join();
-            return String.valueOf(trackPaging.getTotal());
+            // spotify link = trackPaging.getItems()[0].getExternalUrls().get("spotify")
+            // image link = albumPaging.getItems()[0].getImages()[0].getUrl()
+            // spotify link trackPaging.getItems()[0].getId();
+            return String.valueOf(trackPaging.getItems()[0].getExternalUrls().get("spotify") + "\n" + albumPaging.getItems()[0].getImages()[0].getUrl());
         }catch (Exception e){
             return e.getMessage();
 
