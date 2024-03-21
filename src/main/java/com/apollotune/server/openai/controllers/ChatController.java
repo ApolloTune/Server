@@ -1,7 +1,9 @@
 package com.apollotune.server.openai.controllers;
 
+import com.apollotune.server.exceptions.ApiException;
 import com.apollotune.server.openai.payloads.request.KeySearchRequest;
 import com.apollotune.server.openai.payloads.response.KeySearchResponse;
+import com.apollotune.server.openai.payloads.response.KeySearchResponseWithSpotify;
 import com.apollotune.server.openai.prompt.PromptByKeySearch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +36,7 @@ import se.michaelthelin.spotify.requests.data.search.simplified.special.SearchAl
 import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -84,7 +87,7 @@ public class ChatController {
 
      */
     @GetMapping("/keysearchrequest")
-    public String keySearch(@RequestBody KeySearchRequest keySearchRequest) throws IOException {
+    public  List<KeySearchResponseWithSpotify> keySearch(@RequestBody KeySearchRequest keySearchRequest) throws IOException {
         PromptByKeySearch promptByApp = new PromptByKeySearch();
 
         promptByApp.setMusicemotion(keySearchRequest.getEmotions());
@@ -97,6 +100,7 @@ public class ChatController {
         String responseGpt = model.generate(prompt.text());
         List<KeySearchResponse> keySearchResponses = objectMapper.readValue(responseGpt, new TypeReference<List<KeySearchResponse>>() {
         });
+        List<KeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
         try{
             SpotifyApi spotifyApi = new SpotifyApi.Builder()
                     .setClientId(SPOTIFY_CLIENT_ID)
@@ -106,29 +110,34 @@ public class ChatController {
                     .build();
             ClientCredentials clientCredentials = clientCredentialsRequest.execute();
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
-            SearchTracksRequest searchTracksRequest = spotifyApi.searchTracks(keySearchResponses.get(0).getMusicName())
-            .market(CountryCode.SE)
-            .limit(10)
-            .offset(0)
-            .build();
-            SearchAlbumsSpecialRequest searchAlbumsRequest = spotifyApi.searchAlbumsSpecial(keySearchResponses.get(0).getMusicName())
-            .market(CountryCode.SE)
-            .limit(10)
-            .offset(0)
-            .build();
 
-            Paging<Track> trackPaging = searchTracksRequest.execute();
-            Paging<AlbumSimplifiedSpecial> albumPaging = searchAlbumsRequest.execute();
-            System.out.println("Return : "+ trackPaging.getItems()[0]);
-            //CompletableFuture<Paging<Track>> pagingFuture = searchTracksRequest.executeAsync();
-            //Paging<Track> trackPaging1 = pagingFuture.join();
+            for(KeySearchResponse response : keySearchResponses){
+                SearchTracksRequest searchTracksRequest = spotifyApi.searchTracks(response.getMusicName())
+                        .market(CountryCode.SE)
+                        .limit(10)
+                        .offset(0)
+                        .build();
+                SearchAlbumsSpecialRequest searchAlbumsRequest = spotifyApi.searchAlbumsSpecial(response.getMusicName())
+                        .market(CountryCode.SE)
+                        .limit(10)
+                        .offset(0)
+                        .build();
+                Paging<Track> trackPaging = searchTracksRequest.execute();
+                Paging<AlbumSimplifiedSpecial> albumPaging = searchAlbumsRequest.execute();
+                String url = trackPaging.getItems()[0].getExternalUrls().get("spotify");
+                String image = albumPaging.getItems()[0].getImages()[0].getUrl();
+                responseWithSpotifies.add(new KeySearchResponseWithSpotify(response.getMusicName(), response.getArtistName(), image, url));
+            }
+            return responseWithSpotifies;
+            // System.out.println("Return : "+ trackPaging.getItems()[0]);
             // spotify link = trackPaging.getItems()[0].getExternalUrls().get("spotify")
             // image link = albumPaging.getItems()[0].getImages()[0].getUrl()
             // spotify link trackPaging.getItems()[0].getId();
-            return String.valueOf(trackPaging.getItems()[0].getExternalUrls().get("spotify") + "\n" + albumPaging.getItems()[0].getImages()[0].getUrl());
+            //  String.valueOf(trackPaging.getItems()[0].getExternalUrls().get("spotify") + "\n" + albumPaging.getItems()[0].getImages()[0].getUrl());
         }catch (Exception e){
-            return e.getMessage();
-
+            throw new ApiException(e.getMessage());
+        }finally {
+            return responseWithSpotifies;
         }
 
     }
