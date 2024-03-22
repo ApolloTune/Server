@@ -13,6 +13,7 @@ import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,9 +40,6 @@ public class ChatController {
     @Value("${openai.model}")
     private String MODEL;
 
-    @Value("${openai.api.url}")
-    private String API_URL;
-
     @Value("${openai.api.key}")
     private String OPEN_API_KEY;
 
@@ -51,25 +49,8 @@ public class ChatController {
     @Value("${spotify.client-id}")
     private String SPOTIFY_CLIENT_ID;
 
-    @Value("${spotify.redirect-url}")
-    private String SPOTIFY_REDIRECT_URL;
-
-    @GetMapping("/keysearchrequest")
-    public List<KeySearchResponseWithSpotify> keySearch(@RequestBody KeySearchRequest keySearchRequest) throws IOException {
-        PromptByKeySearch promptByApp = new PromptByKeySearch();
-
-        promptByApp.setMusicemotion(keySearchRequest.getEmotions());
-        promptByApp.setMusicyear(keySearchRequest.getMusicYears());
-        promptByApp.setMusictype(keySearchRequest.getMusicTypes());
-        promptByApp.setMusiclanguages(keySearchRequest.getMusicLanguages());
-        ObjectMapper objectMapper = new ObjectMapper();
-        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
-        ChatLanguageModel model = OpenAiChatModel.builder().apiKey(OPEN_API_KEY).modelName(MODEL).temperature(0.3).build();
-        String responseGpt = model.generate(prompt.text());
-        List<KeySearchResponse> keySearchResponses = objectMapper.readValue(responseGpt, new TypeReference<List<KeySearchResponse>>() {
-        });
-        List<KeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
-
+    @Nullable
+    private List<KeySearchResponseWithSpotify> getKeySearchResponseWithSpotifies(List<KeySearchResponse> keySearchResponses, List<KeySearchResponseWithSpotify> responseWithSpotifies) {
         try {
             SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId(SPOTIFY_CLIENT_ID).setClientSecret(SPOTIFY_CLIENT_SECRET_ID).build();
             ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials().build();
@@ -91,6 +72,24 @@ public class ChatController {
         } finally {
             return responseWithSpotifies;
         }
+    }
 
+    @GetMapping("/keysearchrequest")
+    public List<KeySearchResponseWithSpotify> keySearch(@RequestBody KeySearchRequest keySearchRequest) throws IOException {
+        PromptByKeySearch promptByApp = new PromptByKeySearch();
+
+        promptByApp.setMusicemotion(keySearchRequest.getEmotions());
+        promptByApp.setMusicyear(keySearchRequest.getMusicYears());
+        promptByApp.setMusictype(keySearchRequest.getMusicTypes());
+        promptByApp.setMusiclanguages(keySearchRequest.getMusicLanguages());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
+        ChatLanguageModel model = OpenAiChatModel.builder().apiKey(OPEN_API_KEY).modelName(MODEL).temperature(0.3).build();
+        String responseGpt = model.generate(prompt.text());
+        List<KeySearchResponse> keySearchResponses = objectMapper.readValue(responseGpt, new TypeReference<List<KeySearchResponse>>() {
+        });
+        List<KeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+
+        return getKeySearchResponseWithSpotifies(keySearchResponses, responseWithSpotifies);
     }
 }
