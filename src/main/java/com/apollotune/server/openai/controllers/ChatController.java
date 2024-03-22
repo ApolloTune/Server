@@ -52,15 +52,29 @@ public class ChatController {
     @Nullable
     private List<KeySearchResponseWithSpotify> getKeySearchResponseWithSpotifies(List<KeySearchResponse> keySearchResponses, List<KeySearchResponseWithSpotify> responseWithSpotifies) {
         try {
-            SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId(SPOTIFY_CLIENT_ID).setClientSecret(SPOTIFY_CLIENT_SECRET_ID).build();
-            ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials().build();
+            SpotifyApi spotifyApi = new SpotifyApi
+                    .Builder()
+                    .setClientId(SPOTIFY_CLIENT_ID)
+                    .setClientSecret(SPOTIFY_CLIENT_SECRET_ID)
+                    .build();
+            ClientCredentialsRequest clientCredentialsRequest = spotifyApi
+                    .clientCredentials()
+                    .build();
             ClientCredentials clientCredentials = clientCredentialsRequest.execute();
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
             for (KeySearchResponse response : keySearchResponses) {
-                SearchTracksRequest searchTracksRequest = spotifyApi.searchTracks(response.getMusicName()).market(CountryCode.SE).limit(10).offset(0).build();
+                SearchTracksRequest searchTracksRequest = spotifyApi
+                        .searchTracks(response.getArtistName()+" "+response.getMusicName())
+                        .market(CountryCode.SE)
+                        .limit(10)
+                        .offset(0)
+                        .build();
                 Paging<Track> trackPaging = searchTracksRequest.execute();
-                GetTrackRequest getTrackRequest = spotifyApi.getTrack(trackPaging.getItems()[0].getId()).build();
+                GetTrackRequest getTrackRequest = spotifyApi
+                        .getTrack(trackPaging.getItems()[0]
+                        .getId())
+                        .build();
                 Track track = getTrackRequest.execute();
                 String url = track.getExternalUrls().get("spotify");
                 String image = track.getAlbum().getImages()[0].getUrl();

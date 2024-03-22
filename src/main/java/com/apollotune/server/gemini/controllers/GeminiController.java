@@ -71,7 +71,7 @@ public class GeminiController {
 
             for (GeminiKeySearchResponse response : geminiKeySearchResponses) {
                 SearchTracksRequest searchTracksRequest = spotifyApi
-                        .searchTracks(response.getMusicName())
+                        .searchTracks(response.getArtistName()+" "+response.getMusicName())
                         .market(CountryCode.SE)
                         .limit(10)
                         .offset(0)
@@ -79,7 +79,7 @@ public class GeminiController {
                 Paging<Track> trackPaging = searchTracksRequest.execute();
                 GetTrackRequest getTrackRequest = spotifyApi
                         .getTrack(trackPaging.getItems()[0]
-                                .getId())
+                        .getId())
                         .build();
                 Track track = getTrackRequest.execute();
                 String url = track.getExternalUrls().get("spotify");
