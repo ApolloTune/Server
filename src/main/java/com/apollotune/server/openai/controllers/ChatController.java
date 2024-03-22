@@ -1,10 +1,13 @@
 package com.apollotune.server.openai.controllers;
 
 import com.apollotune.server.exceptions.ApiException;
+import com.apollotune.server.openai.payloads.request.FavoriteSearchRequest;
 import com.apollotune.server.openai.payloads.request.KeySearchRequest;
 import com.apollotune.server.openai.payloads.response.KeySearchResponse;
 import com.apollotune.server.openai.payloads.response.KeySearchResponseWithSpotify;
+import com.apollotune.server.openai.prompt.PromptByFavoriteSearch;
 import com.apollotune.server.openai.prompt.PromptByKeySearch;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neovisionaries.i18n.CountryCode;
@@ -106,4 +109,25 @@ public class ChatController {
 
         return getKeySearchResponseWithSpotifies(keySearchResponses, responseWithSpotifies);
     }
+    @GetMapping("/favoritesearchrequest")
+    public List<KeySearchResponseWithSpotify> favoriteSearch(@RequestBody FavoriteSearchRequest favoriteSearchRequest) throws IOException {
+        PromptByFavoriteSearch promptByApp = new PromptByFavoriteSearch();
+        promptByApp.setSongname(favoriteSearchRequest.getMusicName());
+        promptByApp.setSongartist(favoriteSearchRequest.getArtistName());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
+        ChatLanguageModel model = OpenAiChatModel
+                .builder()
+                .apiKey(OPEN_API_KEY)
+                .modelName(MODEL)
+                .temperature(0.3)
+                .build();
+        String responseGpt = model.generate(prompt.text());
+        List<KeySearchResponse> keySearchResponses = objectMapper.readValue(responseGpt, new TypeReference<List<KeySearchResponse>>() {
+        });
+        List<KeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+
+        return getKeySearchResponseWithSpotifies(keySearchResponses, responseWithSpotifies);
+    }
+
 }
