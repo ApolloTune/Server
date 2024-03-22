@@ -2,9 +2,11 @@ package com.apollotune.server.gemini.controllers;
 
 
 import com.apollotune.server.exceptions.ApiException;
+import com.apollotune.server.gemini.payloads.request.GeminiFavoriteSearchRequest;
 import com.apollotune.server.gemini.payloads.request.GeminiKeySearchRequest;
 import com.apollotune.server.gemini.payloads.response.GeminiKeySearchResponse;
 import com.apollotune.server.gemini.payloads.response.GeminiKeySearchResponseWithSpotify;
+import com.apollotune.server.gemini.prompt.GeminiPromptByFavoriteSearch;
 import com.apollotune.server.gemini.prompt.GeminiPromptByKeySearch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -112,6 +114,26 @@ public class GeminiController {
             ));
             String responseVertexAi = ResponseHandler.getText(response);
             List<GeminiKeySearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiKeySearchResponse>>() {
+            });
+            List<GeminiKeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+            return getKeySearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
+        }
+    }
+    @GetMapping("/favoritesearchrequest")
+    public List<GeminiKeySearchResponseWithSpotify> favoriteSearch(@RequestBody GeminiFavoriteSearchRequest favoriteSearchRequest) throws IOException {
+        GeminiPromptByFavoriteSearch promptByApp = new GeminiPromptByFavoriteSearch();
+        promptByApp.setSongname(favoriteSearchRequest.getMusicName());
+        promptByApp.setSongartist(favoriteSearchRequest.getArtistName());
+
+        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try(VertexAI vertexAI = new VertexAI(PROJECT, LOCATION)){
+            GenerativeModel model = new GenerativeModel(MODEL, vertexAI);
+            GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
+                    prompt.text()
+            ));
+            String responseVertexAi = ResponseHandler.getText(response);
+            List<GeminiKeySearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi,new TypeReference<List<GeminiKeySearchResponse>>() {
             });
             List<GeminiKeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
             return getKeySearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
