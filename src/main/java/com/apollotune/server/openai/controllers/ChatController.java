@@ -3,10 +3,12 @@ package com.apollotune.server.openai.controllers;
 import com.apollotune.server.exceptions.ApiException;
 import com.apollotune.server.openai.payloads.request.FavoriteSearchRequest;
 import com.apollotune.server.openai.payloads.request.KeySearchRequest;
+import com.apollotune.server.openai.payloads.request.SentenceSearchRequest;
 import com.apollotune.server.openai.payloads.response.KeySearchResponse;
 import com.apollotune.server.openai.payloads.response.KeySearchResponseWithSpotify;
 import com.apollotune.server.openai.prompt.PromptByFavoriteSearch;
 import com.apollotune.server.openai.prompt.PromptByKeySearch;
+import com.apollotune.server.openai.prompt.PromptBySentenceSearch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -101,7 +103,12 @@ public class ChatController {
         promptByApp.setMusiclanguages(keySearchRequest.getMusicLanguages());
         ObjectMapper objectMapper = new ObjectMapper();
         Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
-        ChatLanguageModel model = OpenAiChatModel.builder().apiKey(OPEN_API_KEY).modelName(MODEL).temperature(0.3).build();
+        ChatLanguageModel model = OpenAiChatModel
+                .builder()
+                .apiKey(OPEN_API_KEY)
+                .modelName(MODEL)
+                .temperature(0.3)
+                .build();
         String responseGpt = model.generate(prompt.text());
         List<KeySearchResponse> keySearchResponses = objectMapper.readValue(responseGpt, new TypeReference<List<KeySearchResponse>>() {
         });
@@ -127,6 +134,24 @@ public class ChatController {
         });
         List<KeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
 
+        return getKeySearchResponseWithSpotifies(keySearchResponses, responseWithSpotifies);
+    }
+    @GetMapping("/sentencesearchrequest")
+    public List<KeySearchResponseWithSpotify> sentenceSearch(@RequestBody SentenceSearchRequest sentenceSearchRequest) throws JsonProcessingException {
+        PromptBySentenceSearch promptByApp = new PromptBySentenceSearch();
+        promptByApp.setSentence(sentenceSearchRequest.getSentence());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
+        ChatLanguageModel model = OpenAiChatModel
+                .builder()
+                .apiKey(OPEN_API_KEY)
+                .modelName(MODEL)
+                .temperature(0.3)
+                .build();
+        String responseGpt = model.generate(prompt.text());
+        List<KeySearchResponse> keySearchResponses = objectMapper.readValue(responseGpt, new TypeReference<List<KeySearchResponse>>() {
+        });
+        List<KeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
         return getKeySearchResponseWithSpotifies(keySearchResponses, responseWithSpotifies);
     }
 
