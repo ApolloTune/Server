@@ -4,10 +4,12 @@ package com.apollotune.server.gemini.controllers;
 import com.apollotune.server.exceptions.ApiException;
 import com.apollotune.server.gemini.payloads.request.GeminiFavoriteSearchRequest;
 import com.apollotune.server.gemini.payloads.request.GeminiKeySearchRequest;
-import com.apollotune.server.gemini.payloads.response.GeminiKeySearchResponse;
-import com.apollotune.server.gemini.payloads.response.GeminiKeySearchResponseWithSpotify;
+import com.apollotune.server.gemini.payloads.request.GeminiSentenceSearchRequest;
+import com.apollotune.server.gemini.payloads.response.GeminiSearchResponse;
+import com.apollotune.server.gemini.payloads.response.GeminiSearchResponseWithSpotify;
 import com.apollotune.server.gemini.prompt.GeminiPromptByFavoriteSearch;
 import com.apollotune.server.gemini.prompt.GeminiPromptByKeySearch;
+import com.apollotune.server.gemini.prompt.GeminiPromptBySentenceSearch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.vertexai.VertexAI;
@@ -58,7 +60,7 @@ public class GeminiController {
     private String SPOTIFY_CLIENT_ID;
 
     @Nullable
-    private List<GeminiKeySearchResponseWithSpotify> getKeySearchResponseWithSpotifies(List<GeminiKeySearchResponse> geminiKeySearchResponses, List<GeminiKeySearchResponseWithSpotify> geminiKeySearchResponseWithSpotifies) {
+    private List<GeminiSearchResponseWithSpotify> getSearchResponseWithSpotifies(List<GeminiSearchResponse> geminiKeySearchResponses, List<GeminiSearchResponseWithSpotify> geminiKeySearchResponseWithSpotifies) {
         try {
             SpotifyApi spotifyApi = new SpotifyApi
                     .Builder()
@@ -71,9 +73,9 @@ public class GeminiController {
             ClientCredentials clientCredentials = clientCredentialsRequest.execute();
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
-            for (GeminiKeySearchResponse response : geminiKeySearchResponses) {
+            for (GeminiSearchResponse response : geminiKeySearchResponses) {
                 SearchTracksRequest searchTracksRequest = spotifyApi
-                        .searchTracks(response.getArtistName()+" "+response.getMusicName())
+                        .searchTracks(response.getArtistName() + " " + response.getMusicName())
                         .market(CountryCode.SE)
                         .limit(10)
                         .offset(0)
@@ -81,12 +83,12 @@ public class GeminiController {
                 Paging<Track> trackPaging = searchTracksRequest.execute();
                 GetTrackRequest getTrackRequest = spotifyApi
                         .getTrack(trackPaging.getItems()[0]
-                        .getId())
+                                .getId())
                         .build();
                 Track track = getTrackRequest.execute();
                 String url = track.getExternalUrls().get("spotify");
                 String image = track.getAlbum().getImages()[0].getUrl();
-                geminiKeySearchResponseWithSpotifies.add(new GeminiKeySearchResponseWithSpotify(response.getMusicName(), response.getArtistName(), image, url));
+                geminiKeySearchResponseWithSpotifies.add(new GeminiSearchResponseWithSpotify(response.getMusicName(), response.getArtistName(), image, url));
             }
             return geminiKeySearchResponseWithSpotifies;
         } catch (Exception e) {
@@ -97,7 +99,7 @@ public class GeminiController {
     }
 
     @GetMapping("/keysearchrequest")
-    public List<GeminiKeySearchResponseWithSpotify> keySearch(@RequestBody GeminiKeySearchRequest keySearchRequest) throws IOException {
+    public List<GeminiSearchResponseWithSpotify> keySearch(@RequestBody GeminiKeySearchRequest keySearchRequest) throws IOException {
         GeminiPromptByKeySearch promptByApp = new GeminiPromptByKeySearch();
 
         promptByApp.setMusicemotion(keySearchRequest.getEmotions());
@@ -107,36 +109,67 @@ public class GeminiController {
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
         ObjectMapper objectMapper = new ObjectMapper();
+        VertexAI vertexAI = new VertexAI(PROJECT, LOCATION);
+        GenerativeModel model = new GenerativeModel(MODEL, vertexAI);
+        GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
+                prompt.text()
+        ));
+        String responseVertexAi = ResponseHandler.getText(response);
+        List<GeminiSearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiSearchResponse>>() {
+        });
+        List<GeminiSearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+        return getSearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
+
+    }
+
+    @GetMapping("/favoritesearchrequest")
+    public List<GeminiSearchResponseWithSpotify> favoriteSearch(@RequestBody GeminiFavoriteSearchRequest favoriteSearchRequest) throws IOException {
+        GeminiPromptByFavoriteSearch promptByApp = new GeminiPromptByFavoriteSearch();
+        promptByApp.setSongname(favoriteSearchRequest.getMusicName());
+        promptByApp.setSongartist(favoriteSearchRequest.getArtistName());
+        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
+        ObjectMapper objectMapper = new ObjectMapper();
+        VertexAI vertexAI = new VertexAI(PROJECT, LOCATION);
+        GenerativeModel model = new GenerativeModel(MODEL, vertexAI);
+        GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
+                prompt.text()
+        ));
+        String responseVertexAi = ResponseHandler.getText(response);
+        List<GeminiSearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiSearchResponse>>() {
+        });
+        List<GeminiSearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+        return getSearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
+    }
+
+    @GetMapping("/sentencesearchrequest")
+    public List<GeminiSearchResponseWithSpotify> sentenceSearch(@RequestBody GeminiSentenceSearchRequest sentenceSearchRequest) throws IOException {
+        GeminiPromptBySentenceSearch promptByApp = new GeminiPromptBySentenceSearch();
+        promptByApp.setSentence(sentenceSearchRequest.getSentence());
+        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
+
+        ObjectMapper objectMapper = new ObjectMapper();
         try (VertexAI vertexAI = new VertexAI(PROJECT, LOCATION)) {
             GenerativeModel model = new GenerativeModel(MODEL, vertexAI);
             GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
                     prompt.text()
             ));
             String responseVertexAi = ResponseHandler.getText(response);
-            List<GeminiKeySearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiKeySearchResponse>>() {
+            List<GeminiSearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiSearchResponse>>() {
             });
-            List<GeminiKeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
-            return getKeySearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
-        }
-    }
-    @GetMapping("/favoritesearchrequest")
-    public List<GeminiKeySearchResponseWithSpotify> favoriteSearch(@RequestBody GeminiFavoriteSearchRequest favoriteSearchRequest) throws IOException {
-        GeminiPromptByFavoriteSearch promptByApp = new GeminiPromptByFavoriteSearch();
-        promptByApp.setSongname(favoriteSearchRequest.getMusicName());
-        promptByApp.setSongartist(favoriteSearchRequest.getArtistName());
-
-        Prompt prompt = StructuredPromptProcessor.toPrompt(promptByApp);
-        ObjectMapper objectMapper = new ObjectMapper();
-        try(VertexAI vertexAI = new VertexAI(PROJECT, LOCATION)){
+            List<GeminiSearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+            return getSearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            VertexAI vertexAI = new VertexAI(PROJECT, LOCATION);
             GenerativeModel model = new GenerativeModel(MODEL, vertexAI);
             GenerateContentResponse response = model.generateContent(ContentMaker.fromMultiModalData(
-                    prompt.text()
+                    "Suggest the 10 most listened songs"
             ));
             String responseVertexAi = ResponseHandler.getText(response);
-            List<GeminiKeySearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi,new TypeReference<List<GeminiKeySearchResponse>>() {
+            List<GeminiSearchResponse> geminiKeySearchResponses = objectMapper.readValue(responseVertexAi, new TypeReference<List<GeminiSearchResponse>>() {
             });
-            List<GeminiKeySearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
-            return getKeySearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
+            List<GeminiSearchResponseWithSpotify> responseWithSpotifies = new ArrayList<>();
+            return getSearchResponseWithSpotifies(geminiKeySearchResponses, responseWithSpotifies);
         }
     }
 }

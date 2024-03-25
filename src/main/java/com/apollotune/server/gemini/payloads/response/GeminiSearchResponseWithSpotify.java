@@ -1,5 +1,6 @@
 package com.apollotune.server.gemini.payloads.response;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,9 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GeminiKeySearchResponse {
-    private String artistName;
-    private String musicName;
-    private String genre;
-    private String language;
+public class GeminiSearchResponseWithSpotify {
+    private String songName;
+    private String songArtist;
+    private String songPhoto;
+    private String spotifyLink;
 }
