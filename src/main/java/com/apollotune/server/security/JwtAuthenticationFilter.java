@@ -1,5 +1,7 @@
 package com.apollotune.server.security;
 
+import com.apollotune.server.exceptions.GlobalExceptionHandler;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
@@ -21,7 +24,8 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-
+    private final HandlerExceptionResolver handlerExceptionResolver;
+    private final GlobalExceptionHandler globalExceptionHandler;
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         // 1. İstek başlığından "Authorization" başlığını al
@@ -35,36 +39,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        try{
 
-        // 4. JWT'yi "Bearer " önekinden ayır
-        jwt = authHeader.substring(7);
-        // 5. JWT'den kullanıcı adını çıkart
-        userEmail = jwtService.extractUsername(jwt);
+            // 4. JWT'yi "Bearer " önekinden ayır
+            jwt = authHeader.substring(7);
+            // 5. JWT'den kullanıcı adını çıkart
+            userEmail = jwtService.extractUsername(jwt);
 
-        // 6. Kullanıcı adı varsa ve güvenlik bağlamında kimlik doğrulaması yapılmamışsa
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // 7. Kullanıcı detaylarını kullanıcı adına göre yükle
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            // 6. Kullanıcı adı varsa ve güvenlik bağlamında kimlik doğrulaması yapılmamışsa
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 7. Kullanıcı detaylarını kullanıcı adına göre yükle
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-            // 8. Token geçerliyse kimlik doğrulama yap
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                // 9. Kimlik doğrulama token'ını oluştur
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+                // 8. Token geçerliyse kimlik doğrulama yap
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    // 9. Kimlik doğrulama token'ını oluştur
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                // 10. Kimlik doğrulama token'ına ilgili detayları ekle
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                    // 10. Kimlik doğrulama token'ına ilgili detayları ekle
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
 
-                // 11. Güvenlik bağlamına kimlik doğrulama token'ını ekle
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // 11. Güvenlik bağlamına kimlik doğrulama token'ını ekle
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+            // 12. Diğer filtreleri devam ettir
+            filterChain.doFilter(request, response);
+        }catch (ExpiredJwtException expiredJwtException){
+            handlerExceptionResolver.resolveException(request, response, null, expiredJwtException);
         }
-        // 12. Diğer filtreleri devam ettir
-        filterChain.doFilter(request, response);
     }
 }
